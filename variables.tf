@@ -29,9 +29,13 @@ variable "db_username" {
 }
 
 variable "db_engine_version" {
-  description = "Mesma major do Postgres usado em desenvolvimento, para não divergir do Prisma."
+  description = <<-EOT
+    Apenas a major. O RDS escolhe a minor suportada no momento da criação — a
+    17.4 que estava fixada aqui nem existe mais em us-east-1, onde hoje a
+    família começa na 17.5. Fixar a minor quebra o apply quando ela sai de linha.
+  EOT
   type        = string
-  default     = "17.4"
+  default     = "17"
 }
 
 variable "db_instance_class" {
