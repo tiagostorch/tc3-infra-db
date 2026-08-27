@@ -8,7 +8,7 @@ Provisiona o PostgreSQL no Amazon RDS e publica as credenciais no SSM Parameter 
 
 | Recurso | Detalhe |
 |---|---|
-| `aws_db_instance` | PostgreSQL 17, `db.t4g.micro`, storage criptografado |
+| `aws_db_instance` | PostgreSQL 17 (minor escolhida pelo RDS), `db.t4g.micro`, storage criptografado |
 | Subnet group | Subnets privadas da VPC criada em `tc3-infra-k8s` |
 | Security group | Porta 5432 liberada apenas para os nós do EKS |
 | Senha | Gerada pelo Terraform, nunca versionada |

@@ -4,5 +4,5 @@ state_bucket = "tc3-tfstate-oficina-SEUSUFIXO"
 
 db_name           = "oficina_db"
 db_username       = "oficina_user"
-db_engine_version = "17.4"
+db_engine_version = "17"
 db_instance_class = "db.t4g.micro"
