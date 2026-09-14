@@ -25,7 +25,7 @@ Este repositório **depende de `tc3-infra-k8s`**: lê `vpc_id`, `private_subnet_
 ## Execução
 
 ```bash
-cp terraform.tfvars.example terraform.tfvars   # editar
+cp terraform.tfvars.sample terraform.tfvars   # editar
 terraform init -backend-config="bucket=SEU_BUCKET"
 terraform apply
 ```
