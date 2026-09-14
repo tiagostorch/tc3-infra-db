@@ -80,20 +80,38 @@ O detalhamento está em
 
 ## Modelagem de dados
 
-O modelo relacional, o diagrama ER e a justificativa formal da escolha do PostgreSQL fazem parte da documentação desta entrega e vivem em `docs/` (a ser preenchido).
+O **modelo relacional**, o **diagrama ER** e a **justificativa formal** da escolha do PostgreSQL vivem no repositório da aplicação, onde o schema é mantido:
 
-Ajuste previsto para a Fase 3: inclusão do campo `status` em `Cliente`, necessário para a Lambda de autenticação validar não apenas a existência do CPF, mas também se o cliente está ativo.
+- [**RFC-003 — Escolha do banco e ajustes no modelo relacional**](https://github.com/LucasValada/tech-challenge-fiap/blob/develop/docs/rfc/RFC-003-escolha-do-banco.md)
+- Seção [**Modelo de dados (Diagrama ER)**](https://github.com/LucasValada/tech-challenge-fiap#modelo-de-dados-diagrama-er) do README do [`tech-challenge-fiap`](https://github.com/LucasValada/tech-challenge-fiap)
+- Schema canônico: `prisma/schema.prisma` (aplicação)
+
+Ajustes da modelagem já aplicados na Fase 3 (o "melhorar" que a fase pede): campo `status` em `Cliente` (a Lambda de autenticação valida não só a existência do CPF, mas se o cliente está **ATIVO**), snapshots imutáveis nas linhas da OS, numeração sequencial anual e políticas de exclusão explícitas — detalhados na RFC-003.
 
 ## Arquitetura
 
+```mermaid
+graph TB
+    subgraph K8S["tc3-infra-k8s (via state remoto)"]
+        Nodes["nós EKS<br/>node_security_group_id"]
+    end
+
+    subgraph DB["tc3-infra-db (este repositório)"]
+        SG["<b>Security Group</b><br/>porta 5432 só a partir dos nós EKS"]
+        RDS[("<b>RDS PostgreSQL 17</b><br/>db.t4g.micro · subnet privada<br/>storage criptografado · TLS")]
+        SSM["<b>SSM Parameter Store</b><br/>DATABASE_URL (SecureString)<br/>+ DB_HOST/PORT/NAME/USER/PASS"]
+        NRI["nri-postgresql<br/>(deployment no cluster)"]
+    end
+
+    App["API (EKS) + Lambda de auth<br/>tech-challenge-fiap · tc3-auth-lambda"]
+    NR["New Relic"]
+
+    Nodes -->|"SQL/TLS 5432"| SG
+    SG --> RDS
+    RDS -->|"credenciais publicadas"| SSM
+    App -->|"leem DATABASE_URL etc."| SSM
+    NRI -->|"pg_stat_* a cada 30s"| RDS
+    NRI -->|"métricas"| NR
 ```
-   tc3-infra-k8s                    tc3-infra-db
-   ┌───────────────┐                ┌──────────────────────┐
-   │ VPC           │───outputs────▶ │ subnet group         │
-   │ subnets priv. │                │ security group       │
-   │ nós EKS ──────┼──── 5432 ────▶ │ RDS PostgreSQL 17    │
-   └───────────────┘                │        │             │
-                                    │        ▼             │
-                                    │ SSM: DATABASE_URL    │
-                                    └──────────────────────┘
-```
+
+A VPC, as subnets privadas e o security group dos nós vêm de [`tc3-infra-k8s`](https://github.com/tiagostorch/tc3-infra-k8s) pelo state remoto. As credenciais publicadas no SSM são consumidas pela aplicação ([`tech-challenge-fiap`](https://github.com/LucasValada/tech-challenge-fiap)) e pela Lambda de autenticação ([`tc3-auth-lambda`](https://github.com/tiagostorch/tc3-auth-lambda)).
