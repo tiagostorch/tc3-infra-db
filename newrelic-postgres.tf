@@ -397,6 +397,11 @@ resource "kubernetes_deployment" "nri_postgresql" {
           # HTTP daria "connection refused" para sempre e a liveness deixaria o
           # pod em CrashLoop. O wget é o do BusyBox da imagem (Alpine).
           #
+          # E `127.0.0.1`, não `localhost`: o servidor escuta só em IPv4, e o
+          # wget do BusyBox resolve `localhost` para `::1` (o /etc/hosts da
+          # imagem lista os dois) sem tentar o outro endereço. Com `localhost`
+          # a startup nunca passava e o pod reiniciava a cada 3 min.
+          #
           #   startup    o servidor de status só sobe DEPOIS de o agente
           #              conseguir falar com o New Relic (checagem de rede da
           #              inicialização). Dá até 3 min para isso sem a liveness
@@ -410,7 +415,7 @@ resource "kubernetes_deployment" "nri_postgresql" {
           #              vez de Running e mudo.
           startup_probe {
             exec {
-              command = ["wget", "-q", "-T", "3", "-O", "/dev/null", "http://localhost:${local.nria_status_port}/v1/status/ready"]
+              command = ["wget", "-q", "-T", "3", "-O", "/dev/null", "http://127.0.0.1:${local.nria_status_port}/v1/status/ready"]
             }
 
             period_seconds    = 10
@@ -420,7 +425,7 @@ resource "kubernetes_deployment" "nri_postgresql" {
 
           liveness_probe {
             exec {
-              command = ["wget", "-q", "-T", "3", "-O", "/dev/null", "http://localhost:${local.nria_status_port}/v1/status/ready"]
+              command = ["wget", "-q", "-T", "3", "-O", "/dev/null", "http://127.0.0.1:${local.nria_status_port}/v1/status/ready"]
             }
 
             period_seconds    = 30
@@ -430,7 +435,7 @@ resource "kubernetes_deployment" "nri_postgresql" {
 
           readiness_probe {
             exec {
-              command = ["wget", "-q", "-T", "8", "-O", "/dev/null", "http://localhost:${local.nria_status_port}/v1/status/health"]
+              command = ["wget", "-q", "-T", "8", "-O", "/dev/null", "http://127.0.0.1:${local.nria_status_port}/v1/status/health"]
             }
 
             period_seconds    = 60
