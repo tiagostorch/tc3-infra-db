@@ -51,9 +51,15 @@ resource "aws_db_instance" "principal" {
   skip_final_snapshot     = true
   deletion_protection     = false
 
-  # Alimenta os dashboards de banco na ferramenta de observabilidade.
-  performance_insights_enabled    = true
-  enabled_cloudwatch_logs_exports = ["postgresql"]
+  # O log do Postgres não é mais exportado para o CloudWatch Logs: era o único
+  # item cobrado por GB neste recurso e a telemetria hoje sai pelo nri-postgresql,
+  # que consulta o banco direto de dentro do cluster.
+  #
+  # O Performance Insights fica ligado porque é gratuito nos 7 dias de retenção
+  # e resolve a pergunta que métrica agregada não responde — qual query está
+  # segurando a conexão. Ele não passa pelo CloudWatch: é console do RDS.
+  performance_insights_enabled          = var.performance_insights_enabled
+  performance_insights_retention_period = 7
 
   apply_immediately = true
 }
