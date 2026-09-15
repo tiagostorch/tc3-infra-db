@@ -48,8 +48,10 @@ As migrations do Prisma continuam sendo aplicadas pelo Job do Kubernetes já exi
 `.github/workflows/terraform.yml`
 
 - **Pull request** → `fmt`, `validate` e `plan` comentado no PR
-- **Push em `develop`** → apply em homologação
-- **Push em `main`** → apply em produção
+- **Push em `develop`** → apply automático (rótulo `homolog` no GitHub)
+- **Push em `main`** → apply automático (rótulo `production` no GitHub)
+
+> **Ambiente único:** `develop` e `main` aplicam no **mesmo** ambiente na AWS (mesmo state e recursos) — a distinção homologação/produção é apenas o rótulo do deploy no GitHub e foi desconsiderada.
 
 Secrets necessários: `AWS_ROLE_ARN` e `TF_STATE_BUCKET` (ambos vindos do bootstrap em `tc3-infra-k8s`).
 
